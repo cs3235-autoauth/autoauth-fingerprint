@@ -276,6 +276,64 @@ var getWebglVendorAndRenderer = function () {
     }
 }
 
+// For audio
+var getAudio = async function() {
+    
+    function setCompressorValueIfDefined(item, value) {
+		if (compressor[item] !== undefined && typeof compressor[item].setValueAtTime === 'function') {
+			compressor[item].setValueAtTime(value, context.currentTime);
+		}
+    }
+    
+    // https://github.com/rickmacgillis/audio-fingerprint
+    var audioContext = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+
+    if (audioContext == null) {
+        return undefined;
+    }
+
+    var context = new audioContext(1, 44100, 44100);
+    var oscillator = context.createOscillator();
+    oscillator.type = "triangle";
+    oscillator.frequency.setValueAtTime(10000, context.currentTime);
+
+    compressor = context.createDynamicsCompressor();
+
+    setCompressorValueIfDefined('threshold', -50);
+    setCompressorValueIfDefined('knee', 40);
+    setCompressorValueIfDefined('ratio', 12);
+    setCompressorValueIfDefined('reduction', -20);
+    setCompressorValueIfDefined('attack', 0);
+    setCompressorValueIfDefined('release', .25);
+
+    oscillator.connect(compressor);
+    compressor.connect(context.destination);
+
+    oscillator.start(0);
+
+    var audioTimeoutId = setTimeout(function () {
+        context.oncomplete = function () {}
+        context = null;
+        return undefined;
+      }, 1000)
+    
+    let buffer = await context.startRendering();
+    
+    try {
+        clearTimeout(audioTimeoutId);
+        var fingerprint = buffer.getChannelData(0)
+            .slice(4500, 5000)
+            .reduce(function (acc, val) { return acc + Math.abs(val) }, 0)
+            .toString();
+        oscillator.disconnect();
+        compressor.disconnect();
+      } catch (error) {
+          return undefined;
+      }
+
+      return fingerprint;
+}
+
 /** Utilit Funcs End **/
 
 class Fingerprint {
@@ -316,27 +374,46 @@ class Fingerprint {
 
 
     static screenResolution() {
-        return undefined;
+        var resolution = [window.screen.width, window.screen.height];
+        
+        return resolution;
     }
 
     static availableScreenResolution() {
+        if (window.screen.availWidth && window.screen.availHeight) {
+            var availResolution = [window.screen.availWidth, window.screen.availHeight];
+            return availResolution;
+        }
+        // headless browsers
         return undefined;
     }
 
     static timezoneOffset() {
-        return undefined;
+        return new Date().getTimezoneOffset();
     }
 
     static timezone() {
-        return undefined;
+        if (window.Intl && window.Intl.DateTimeFormat) {
+            return new window.Intl.DateTimeFormat().resolvedOptions().timeZone;
+        } else {
+            return undefined;
+        }
     }
 
     static sessionStorage() {
-        return undefined;
+        try {
+            return !!window.sessionStorage;
+        } catch (e) {
+          return undefined;
+        }
     }
 
     static localStorage() {
-        return undefined;
+        try {
+            return !!window.localStorage;
+        } catch (e) {
+            return undefined;
+        }
     }
 
     static indexedDb() {
@@ -419,15 +496,27 @@ class Fingerprint {
     }
 
     static touchSupport() {
-        return undefined;
+        var maxTouchPoints = 0;
+
+        if (typeof navigator.maxTouchPoints !== 'undefined') {
+            maxTouchPoints = navigator.maxTouchPoints;
+        } else if (typeof navigator.msMaxTouchPoints !== 'undefined') {
+            maxTouchPoints = navigator.msMaxTouchPoints;
+        }
+
+        return maxTouchPoints;
     }
 
     static fonts() {
         return undefined;
     }
 
-    static audio() {
-        return undefined;
+    static async audio() {
+        // iOS 11 does not allow fingerprinting
+        if (navigator.userAgent.match(/OS 11.+Version\/11.+Safari/))
+            return undefined;
+        else
+            return await getAudio();
     }
 
     static async enumerateDevice() {
@@ -445,7 +534,7 @@ class Fingerprint {
         }
     }
 
-    static get() {
+    static async get() {
         const components = {
             userAgent: this.userAgent(),
             language: this.language(),
@@ -472,7 +561,7 @@ class Fingerprint {
             adBlock: this.adBlock(),
             touchSupport: this.touchSupport(),
             fonts: this.fonts(),
-            audio: this.audio(),
+            audio: await this.audio(),
             enumerateDevice: this.enumerateDevice(),
         };
 
