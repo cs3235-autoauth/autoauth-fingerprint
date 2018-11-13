@@ -420,8 +420,19 @@ class Fingerprint {
         return undefined;
     }
 
-    static enumerateDevice() {
-        return undefined;
+    async static enumerateDevice() {
+        if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+            return undefined;
+        }
+
+        try {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            return devices.map((device) => {
+                return 'id=' + device.deviceId + ';gid=' + device.groupId + ';' + device.kind + ';' + device.label;
+            });
+        } catch (e) {
+            return undefined;
+        }
     }
 
     static get() {
