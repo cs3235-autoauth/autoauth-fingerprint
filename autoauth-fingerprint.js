@@ -597,6 +597,8 @@ class Fingerprint {
                 }
                 spans[fontList[i]] = fontSpans; // fontName: [fontSpans]
             }
+
+            return spans;
         }
 
         // check if candidate font is available
