@@ -340,23 +340,28 @@ class Fingerprint {
     }
 
     static indexedDb() {
-        return undefined;
+        try {
+            return !!window.indexedDB;
+        } catch (e) {
+            return true; // SecurityError means indexedDB exists
+        }
     }
 
     static addBehavior() {
-        return undefined;
+        // body may not exist yet or has been removed
+        return !!(document.body && document.body.addBehavior);
     }
 
     static openDatabase() {
-        return undefined;
+        return !!window.openDatabase;
     }
 
     static cpuClass() {
-        return undefined;
+        return navigator.cpuClass;
     }
 
     static platform() {
-        return undefined;
+        return navigator.platform;
     }
 
     static doNotTrack() {
