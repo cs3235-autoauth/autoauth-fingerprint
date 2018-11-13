@@ -507,8 +507,139 @@ class Fingerprint {
         return maxTouchPoints;
     }
 
+    // https://gist.github.com/szepeviktor/d28dfcfc889fe61763f3
     static fonts() {
-        return undefined;
+        // base fonts to compare candidates against
+        const baseFonts = ['monospace', 'sans-serif', 'serif'];
+        const fontList = [
+        'Andale Mono', 'Arial', 'Arial Black', 'Arial Hebrew', 'Arial MT', 'Arial Narrow', 'Arial Rounded MT Bold', 'Arial Unicode MS',
+        'Bitstream Vera Sans Mono', 'Book Antiqua', 'Bookman Old Style',
+        'Calibri', 'Cambria', 'Cambria Math', 'Century', 'Century Gothic', 'Century Schoolbook', 'Comic Sans', 'Comic Sans MS', 'Consolas', 'Courier', 'Courier New',
+        'Geneva', 'Georgia',
+        'Helvetica', 'Helvetica Neue',
+        'Impact',
+        'Lucida Bright', 'Lucida Calligraphy', 'Lucida Console', 'Lucida Fax', 'LUCIDA GRANDE', 'Lucida Handwriting', 'Lucida Sans', 'Lucida Sans Typewriter', 'Lucida Sans Unicode',
+        'Microsoft Sans Serif', 'Monaco', 'Monotype Corsiva', 'MS Gothic', 'MS Outlook', 'MS PGothic', 'MS Reference Sans Serif', 'MS Sans Serif', 'MS Serif', 'MYRIAD', 'MYRIAD PRO',
+        'Palatino', 'Palatino Linotype',
+        'Segoe Print', 'Segoe Script', 'Segoe UI', 'Segoe UI Light', 'Segoe UI Semibold', 'Segoe UI Symbol',
+        'Tahoma', 'Times', 'Times New Roman', 'Times New Roman PS', 'Trebuchet MS',
+        'Verdana', 'Wingdings', 'Wingdings 2', 'Wingdings 3'
+        ];
+
+        // m because because it takes take up maximum width
+        // LLi so that same matching fonts can get separated
+        const testString = 'mmmmmmmmmmlli';
+        const testSize = '72px';
+
+        const bodyHead = document.getElementsByTagName('body')[0];
+        const baseFontsDiv = document.createElement('div');
+        const fontsDiv = document.createElement('div');
+
+        let defaultWidth = {};
+        let defaultHeight = {};
+
+        // make span for loading fonts
+        const createSpan = () => {
+            let span = document.createElement('span');
+            // make span invisible so that user doesn't see it
+            span.style.position = 'absolute';
+            span.style.left = '-9999px';
+
+            // set default CSS styles for everything
+            span.style.fontStyle = 'normal';
+            span.style.fontWeight = 'normal';
+            span.style.letterSpacing = 'normal';
+            span.style.lineBreak = 'auto';
+            span.style.lineHeight = 'normal';
+            span.style.textTransform = 'none';
+            span.style.textAlign = 'left';
+            span.style.textDecoration = 'none';
+            span.style.textShadow = 'none';
+            span.style.whiteSpace = 'normal';
+            span.style.wordBreak = 'normal';
+            span.style.wordSpacing = 'normal';
+
+            // set span font size and test string
+            span.style.fontSize = testSize;
+            span.innerHTML = testString;
+
+            return span;
+        };
+
+        // create span and load candidate font with base font for fallback
+        const createTestSpanWithFonts = (candidateFont, baseFont) => {
+            let span = createSpan();
+            span.style.fontFamily = `'{candidateFont}', {baseFont}`;
+            return span;
+        };
+
+        // create base font spans and add them to baseFontDiv
+        const initBaseFontSpans = () => {
+            let spans = [];
+            for (let i = 0; i < baseFonts.length; i++) {
+                let span = createSpan();
+                span.style.fontFamily = baseFonts[i];
+                baseFontsDiv.appendChild(span);
+                spans.push(span);
+            }
+            return spans;
+        };
+
+        // create candidate font spans and add them to fontsDiv
+        const initFontSpans = () => {
+            let spans = {};
+            for (let i = 0; i < fontList.length; i++) {
+                let fontSpans = [];
+                for (let j = 0; j < baseFonts.length; j++) {
+                    let span = createTestSpanWithFonts(fontList[j], baseFonts[i]);
+                    fontsDiv.appendChild(span);
+                    fontSpans.push(span);
+                }
+                spans[fontList[i]] = fontSpans; // fontName: [fontSpans]
+            }
+        }
+
+        // check if candidate font is available
+        const isFontAvailable = (fontSpans) => {
+            let available = false;
+            for (let i = 0; i < fontSpans.length; i++) {
+                available = (fontSpans[i].offsetWidth !== defaultWidth[baseFonts[i]] || fontSpans[i].offsetHeight !== defaultHeight[baseFonts[i]]);
+                if (available) {
+                    return true;
+                }
+            }
+            return available;
+        }
+
+        // create spans for base fonts
+        const baseFontSpans = initBaseFontSpans();
+        // add base font spans to DOM
+        bodyHead.appendChild(baseFontsDiv);
+
+        // get default width and height for base fonts
+        for (let i = 0; i < baseFonts.length; i++) {
+            defaultWidth[baseFonts[i]] = baseFontSpans[i].offsetWidth // width for the default font
+            defaultHeight[baseFonts[i]] = baseFontSpans[i].offsetHeight // height for the default font
+        }
+
+        // create spans for candidate fonts
+        const fontSpans = initFontSpans();
+        // add candidate font spans to DOM
+        bodyHead.appendChild(fontsDiv);
+
+        // check which candidate fonts are available
+        let availableFonts = []
+        for (let i = 0; i < fontList.length; i++) {
+            if (isFontAvailable(fontSpans[fontList[i]])) {
+                availableFonts.push(fontList[i]);
+            }
+        }
+
+        // remove DOM elements used for testing
+        bodyHead.removeChild(fontsDiv);
+        bodyHead.removeChild(baseFontsDiv);
+
+        return availableFonts;
     }
 
     static async audio() {
