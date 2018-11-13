@@ -138,6 +138,12 @@ class Fingerprint {
       enumerateDevice: this.enumerateDevice(),
     };
 
+    Object.keys(components).forEach((key) => {
+      if (components[key] === undefined) {
+        components[key] = 'unknown';
+      }
+    });
+
     return components;
   }
 }
