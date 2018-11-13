@@ -562,7 +562,7 @@ class Fingerprint {
             touchSupport: this.touchSupport(),
             fonts: this.fonts(),
             audio: await this.audio(),
-            enumerateDevice: this.enumerateDevice(),
+            enumerateDevice: await this.enumerateDevice(),
         };
 
     Object.keys(components).forEach((key) => {
