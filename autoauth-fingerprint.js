@@ -1,26 +1,37 @@
 class Fingerprint {
   static userAgent() {
-    return undefined;
+    var value = navigator.userAgent;
+    return value;
   }
 
   static language() {
-    return undefined;
+    var value = navigator.language;
+    return value;
+  }
+
+  static languages() {
+    var value = navigator.languages;
+    return value;
   }
 
   static colorDepth() {
-    return undefined;
+    var value = screen.colorDepth;
+    return value;
   }
 
   static deviceMemory() {
-    return undefined;
+    var value = navigator.deviceMemory;
+    return value;
   }
 
   static pixelRatio() {
-    return undefined;
+    var value = window.devicePixelRatio;
+    return value;
   }
 
   static hardwareConcurrency() {
-    return undefined;
+    var value = navigator.hardwareConcurrency;
+    return value;
   }
 
   static screenResolution() {
@@ -111,6 +122,7 @@ class Fingerprint {
     const components = {
       userAgent: this.userAgent(),
       language: this.language(),
+      languages: this.languages(),
       colorDepth: this.colorDepth(),
       deviceMemory: this.deviceMemory(),
       pixelRatio: this.pixelRatio(),
