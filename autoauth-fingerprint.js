@@ -99,6 +99,7 @@ var getCanvasFp = function (options) {
     var result = []
     // Very simple now, need to make it more complex (geo shapes etc)
     var canvas = document.createElement('canvas')
+
     canvas.width = 2000
     canvas.height = 200
     canvas.style.display = 'inline'
@@ -122,6 +123,8 @@ var getCanvasFp = function (options) {
 
     //To data URL
     if (canvas.toDataURL) { result.push('canvas fp:' + sha256(canvas.toDataURL())) }
+
+    
     return result
 }
 
@@ -134,6 +137,7 @@ var isWebGlSupported = function () {
         return false
     }
     var canvas = document.createElement('canvas')
+    canvas.setAttribute("id", "autoauth-test-webgl");
     var gl = null
     try {
         gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl')
@@ -145,7 +149,9 @@ var isWebGlSupported = function () {
 
 var getWebglFp = function() {
     var canvas, ctx, width = 256, height = 128;
-    canvas = document.body.appendChild(document.createElement("canvas"));
+    var c = document.createElement("canvas");
+    c.setAttribute('id', 'autoauth-test-webglfp');
+    canvas = document.body.appendChild(c);
     canvas.width = width,
         canvas.height = height,
         ctx = canvas.getContext("webgl2") || canvas.getContext("experimental-webgl2") || canvas.getContext("webgl") || canvas.getContext("experimental-webgl") || canvas.getContext("moz-webgl");
@@ -195,6 +201,7 @@ var getWebglFp = function() {
 
     //SHA256:
     //credit : https://codepen.io/jon/pen/LLPKbz
+    canvas.parentNode.removeChild(c);
     return sha256(m);
 }
 
