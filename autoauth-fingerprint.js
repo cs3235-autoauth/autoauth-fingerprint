@@ -1,82 +1,14 @@
 
 
+
+
 /*******************
  * Utility Functions 
  * ******************/
 
-//For Plugins
-var isIE = function () {
-    if (navigator.appName === 'Microsoft Internet Explorer') {
-        return true
-    } else if (navigator.appName === 'Netscape' && /Trident/.test(navigator.userAgent)) { // IE 11
-        return true
-    }
-    return false
-}
-
-
-var getRegularPlugins = function () {
-    if (navigator.plugins == null) {
-        return 'not available' 
-    }
-    var plugins = []
-    for (var i = 0, l = navigator.plugins.length; i < l; i++) {
-        if (navigator.plugins[i]) { plugins.push(navigator.plugins[i]) }
-    }
-    return _.map(plugins, function (p) {
-        var mimeTypes = _.map(p, function (mt) {
-            return [mt.type, mt.suffixes];
-        });
-        return [p.name, p.description, mimeTypes];
-    })
-}
-
-var getIEPlugins = function () {
-    var result = [];
-    if ((Object.getOwnPropertyDescriptor && Object.getOwnPropertyDescriptor(window, 'ActiveXObject')) || ('ActiveXObject' in window)) {
-        var names = [
-            'AcroPDF.PDF', // Adobe PDF reader 7+
-            'Adodb.Stream',
-            'AgControl.AgControl', // Silverlight
-            'DevalVRXCtrl.DevalVRXCtrl.1',
-            'MacromediaFlashPaper.MacromediaFlashPaper',
-            'Msxml2.DOMDocument',
-            'Msxml2.XMLHTTP',
-            'PDF.PdfCtrl', // Adobe PDF reader 6 and earlier, brrr
-            'QuickTime.QuickTime', // QuickTime
-            'QuickTimeCheckObject.QuickTimeCheck.1',
-            'RealPlayer',
-            'RealPlayer.RealPlayer(tm) ActiveX Control (32-bit)',
-            'RealVideo.RealVideo(tm) ActiveX Control (32-bit)',
-            'Scripting.Dictionary',
-            'SWCtl.SWCtl', // ShockWave player
-            'Shell.UIHelper',
-            'ShockwaveFlash.ShockwaveFlash', // flash plugin
-            'Skype.Detection',
-            'TDCCtl.TDCCtl',
-            'WMPlayer.OCX', // Windows media player
-            'rmocx.RealPlayer G2 Control',
-            'rmocx.RealPlayer G2 Control.1'
-        ]
-        // starting to detect plugins in IE
-        result = _.map(names, function (name) {
-            try {
-                new window.ActiveXObject(name);
-                return name;
-            } catch (e) {
-                return 'error' 
-            }
-        })
-    } else {
-        //result.push(options.NOT_AVAILABLE)
-        results.push('not available')
-    }
-    if (navigator.plugins) {
-        result = result.concat(getRegularPlugins());
-    }
-    return result;
-}
-
+/* FIXME:
+ * Requires lodash as depedency since it is using the map function from lodash 
+ */
 var sha256 = (function(){
 
     // Eratosthenes seive to find primes up to 311 for magic constants. This is why SHA256 is better than SHA1
@@ -454,11 +386,19 @@ class Fingerprint {
     }
 
     static plugins() {
-        if (isIE()) {
-            return getIEPlugins()
-        } else {
-            return getRegularPlugins()
+        if (navigator.plugins == null) {
+            return 'not available' 
         }
+        var plugins = []
+        for (var i = 0, l = navigator.plugins.length; i < l; i++) {
+            if (navigator.plugins[i]) { plugins.push(navigator.plugins[i]) }
+        }
+        return _.map(plugins, function (p) {
+            var mimeTypes = _.map(p, function (mt) {
+                return [mt.type, mt.suffixes];
+            });
+            return [p.name, p.description, mimeTypes];
+        })
     }
 
     static canvas() {
